@@ -3,7 +3,7 @@
     <h2>SNS KPIダッシュボード</h2>
     <Line :data="chartData" :options="chartOptions" />
   </div>
-</template>
+</template> 
 
 <script setup>
 import { ref, onMounted } from 'vue'
