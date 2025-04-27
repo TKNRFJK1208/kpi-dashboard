@@ -3,7 +3,7 @@
     <h2>SNS KPIダッシュボード</h2>
     <Line :data="chartData" :options="chartOptions" />
   </div>
-</template> 
+</template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -16,17 +16,20 @@ import {
   CategoryScale, LinearScale
 } from 'chart.js'
 
+// Chart.jsプラグインを登録
 ChartJS.register(
   Title, Tooltip, Legend,
   LineElement, PointElement,
   CategoryScale, LinearScale
 )
 
+// グラフデータ（初期状態）
 const chartData = ref({
   labels: [],
   datasets: []
 })
 
+// グラフオプション
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -36,19 +39,27 @@ const chartOptions = {
   }
 }
 
+// コンポーネントマウント時にデータ取得
 onMounted(async () => {
   try {
     const token = localStorage.getItem('access_token')
+
+    // トークンがなかったらエラーにする
+    if (!token) {
+      throw new Error('アクセストークンが存在しません。ログインしてください。')
+    }
+
+    // APIリクエスト
     const res = await axios.get(`${import.meta.env.VITE_API_URL}/metrics`, {
       headers: {
-        Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0YWthIiwiZXhwIjoxNzQ1NDQ2NTQxfQ.qDnMA2LqharbYUITQq8UkN_kJ-zo3VGB2M7OPxdpEEU`,
-        // Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     })
 
     const metrics = res.data
     console.log('✅ 取得したmetrics:', metrics)
 
+    // データをグラフ用に整形
     chartData.value = {
       labels: metrics.map(item => item.date),
       datasets: [
@@ -74,7 +85,8 @@ onMounted(async () => {
     }
 
   } catch (error) {
-    console.error('❌ APIエラー:', error)
+    console.error('❌ APIエラー:', error.message || error)
+    alert('トークンエラーまたはAPIエラーが発生しました。ログインし直してください。')
   }
 })
 </script>
