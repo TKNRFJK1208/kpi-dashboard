@@ -9,12 +9,14 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import { useAuthStore } from '../stores/auth'
 
 // 親コンポーネントに「login-success」イベントをemitできるようにする
 const emit = defineEmits(['login-success'])
 
 const username = ref('')
 const password = ref('')
+const auth = useAuthStore()
 
 const login = async () => {
   try {
@@ -29,6 +31,7 @@ const login = async () => {
     })
 
     const token = res.data.access_token
+    auth.login(token)  // Piniaストアを使ってトークンを保存
     localStorage.setItem('access_token', token)
     console.log('✅ ログイン成功！トークン保存しました')
 

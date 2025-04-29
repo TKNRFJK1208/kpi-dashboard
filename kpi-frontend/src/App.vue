@@ -20,14 +20,17 @@
 import { ref } from 'vue'
 import ChartComponent from './components/ChartComponent.vue'
 import Login from './components/Login.vue'
+import { useAuthStore } from './stores/auth'
 
 const isAuthenticated = ref(!!localStorage.getItem('access_token'))
+const auth = useAuthStore()
 
 function handleLoginSuccess() {
   isAuthenticated.value = true
 }
 
 function logout() {
+  auth.logout()
   localStorage.removeItem('access_token')
   isAuthenticated.value = false
   location.reload()  // ←追加
