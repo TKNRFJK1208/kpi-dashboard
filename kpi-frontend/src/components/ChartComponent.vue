@@ -1,7 +1,15 @@
 <template>
-  <div style="height: 400px;">
+  <div style="height: 500px;">
     <h2>SNS KPIダッシュボード</h2>
-    <Line :data="chartData" :options="chartOptions" />
+
+    <!-- SNS切り替えセレクトボックス -->
+    <select v-model="selectedSNS" @change="fetchMetrics">
+      <option value="tiktok">TikTok</option>
+      <option value="instagram">Instagram</option>
+      <option value="x">X</option>
+    </select>
+
+    <Line v-if="chartData.labels.length" :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -16,41 +24,46 @@ import {
   CategoryScale, LinearScale
 } from 'chart.js'
 
-// Chart.jsプラグインを登録
+// Chart.js登録
 ChartJS.register(
   Title, Tooltip, Legend,
   LineElement, PointElement,
   CategoryScale, LinearScale
 )
 
-// グラフデータ（初期状態）
+// 状態管理
+const selectedSNS = ref('tiktok') // 初期値はTikTok
 const chartData = ref({
   labels: [],
   datasets: []
 })
-
-// グラフオプション
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: { position: 'top' },
-    title: { display: true, text: 'Instagram / TikTok / X 推移' }
+    title: { display: true, text: 'SNSフォロワー推移' }
   }
 }
 
-// コンポーネントマウント時にデータ取得
-onMounted(async () => {
+// データ取得関数
+const fetchMetrics = async () => {
   try {
     const token = localStorage.getItem('access_token')
-
-    // トークンがなかったらエラーにする
     if (!token) {
       throw new Error('アクセストークンが存在しません。ログインしてください。')
     }
 
-    // APIリクエスト
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/metrics`, {
+    let endpoint = ''
+    if (selectedSNS.value === 'tiktok') {
+      endpoint = '/tiktok_metrics'
+    } else if (selectedSNS.value === 'instagram') {
+      endpoint = '/ig_metrics'
+    } else if (selectedSNS.value === 'x') {
+      endpoint = '/x_metrics'
+    }
+
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}${endpoint}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -59,25 +72,12 @@ onMounted(async () => {
     const metrics = res.data
     console.log('✅ 取得したmetrics:', metrics)
 
-    // データをグラフ用に整形
     chartData.value = {
       labels: metrics.map(item => item.date),
       datasets: [
         {
-          label: 'Instagram',
-          data: metrics.map(item => item.instagram),
-          borderColor: 'rgb(255, 99, 132)',
-          fill: false
-        },
-        {
-          label: 'TikTok',
-          data: metrics.map(item => item.tiktok),
-          borderColor: 'rgb(54, 162, 235)',
-          fill: false
-        },
-        {
-          label: 'X',
-          data: metrics.map(item => item.x),
+          label: selectedSNS.value.toUpperCase(),
+          data: metrics.map(item => item.followers),
           borderColor: 'rgb(75, 192, 192)',
           fill: false
         }
@@ -88,5 +88,10 @@ onMounted(async () => {
     console.error('❌ APIエラー:', error.message || error)
     alert('トークンエラーまたはAPIエラーが発生しました。ログインし直してください。')
   }
+}
+
+// 初回実行
+onMounted(() => {
+  fetchMetrics()
 })
 </script>
