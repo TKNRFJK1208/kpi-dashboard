@@ -4,6 +4,7 @@ from datetime import timedelta
 from metrics import router as metrics_router
 from auth import authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from fastapi.middleware.cors import CORSMiddleware # CORS middleware
+from api import scraper
 
 app = FastAPI()
 
@@ -25,3 +26,4 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 app.include_router(metrics_router)
+app.include_router(scraper.router)
